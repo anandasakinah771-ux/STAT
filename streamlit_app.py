@@ -12,12 +12,6 @@ st.markdown(
         background-attachment: fixed;
         font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    .header-container {
-        display: flex;
-        align-items: center; /* sejajar vertikal */
-        justify-content: center;
-        gap: 20px;
-    }
     .header-title {
         font-size: 42px;
         font-weight: 700;
@@ -51,12 +45,9 @@ st.markdown(
 # --- Header ---
 col1, col2 = st.columns([1,4])
 with col1:
-    st.image("Lambang_Badan_Pusat_Statistik_(BPS)_Indonesia.svg.png", width=120)  # pastikan file ada di folder project
+    st.image("Lambang_Badan_Pusat_Statistik_(BPS)_Indonesia.svg.png", width=120)
 with col2:
-    st.markdown(
-        "<div class='header-title'>EconoStat Kota Mojokerto 3576</div>",
-        unsafe_allow_html=True
-    )
+    st.markdown("<div class='header-title'>EconoStat Kota Mojokerto 3576</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='watermark'>output@developer_ananda_sakinah</div>", unsafe_allow_html=True)
 
@@ -73,20 +64,20 @@ if st.session_state.page == "form":
     st.markdown("<div class='subtitle'>Silahkan Input Data Triwulanan di Bawah Ini.</div>", unsafe_allow_html=True)
 
     with st.form(key="Econostat"):
-        date = st.date_input("Tahun/Bulan/Tanggal", key="date")
-        apbd = st.number_input("Realisasi APBD Triwulan", min_value=0, key="apbd")
-        pma = st.number_input("Realisasi PMA Triwulan", min_value=0, key="pma")
-        pmdn = st.number_input("Realisasi PMDN Triwulan", min_value=0, key="pmdn")
-        infra = st.number_input("Realisasi Belanja Infrastruktur Triwulan", min_value=0, key="infra")
-        iph = st.number_input("Data IPH Mingguan Kota Mojokerto", min_value=0.0, format="%.2f", key="iph")
-        inflasi = st.number_input("Data Inflasi Bulanan Kota Kediri", min_value=0.0, format="%.2f", key="inflasi")
-        ekspor = st.number_input("Data Nilai Ekspor Luar Negeri Triwulanan", min_value=0, key="ekspor")
-        padi = st.number_input("Produksi Komoditas Padi Triwulanan", min_value=0, key="padi")
+        date = st.date_input("Tahun/Bulan/Tanggal")
+        apbd = st.number_input("Realisasi APBD Triwulan", min_value=0)
+        pma = st.number_input("Realisasi PMA Triwulan", min_value=0)
+        pmdn = st.number_input("Realisasi PMDN Triwulan", min_value=0)
+        infra = st.number_input("Realisasi Belanja Infrastruktur Triwulan", min_value=0)
+        iph = st.number_input("Data IPH Mingguan Kota Mojokerto", min_value=0.0, format="%.2f")
+        inflasi = st.number_input("Data Inflasi Bulanan Kota Kediri", min_value=0.0, format="%.2f")
+        ekspor = st.number_input("Data Nilai Ekspor Luar Negeri Triwulanan", min_value=0)
+        padi = st.number_input("Produksi Komoditas Padi Triwulanan", min_value=0)
 
         submit_button = st.form_submit_button("Submit Econostat Details")
         if submit_button:
             new_row = pd.DataFrame({
-                "Tanggal": [date.strftime("%d/%m/%Y")],  # format DD/MM/YYYY
+                "Tanggal": [date.strftime("%d/%m/%Y")],
                 "Realisasi APBD": [apbd],
                 "Realisasi PMA": [pma],
                 "Realisasi PMDN": [pmdn],
@@ -100,10 +91,8 @@ if st.session_state.page == "form":
             conn.update(worksheet="Triwulanan", data=existing_data)
             st.success("Data berhasil disubmit dan disimpan!")
 
-            # Reset nilai input ke default agar kosong kembali
-            for key in ["date","apbd","pma","pmdn","infra","iph","inflasi","ekspor","padi"]:
-                if key in st.session_state:
-                    del st.session_state[key]
+            # Reset input dengan clear seluruh form
+            st.session_state.clear()
 
     if st.button("Next ➡️"):
         st.session_state.page = "grafik"
@@ -115,7 +104,6 @@ elif st.session_state.page == "grafik":
 
     df = existing_data.copy()
     if "Tanggal" in df.columns:
-        # Konversi tipe data dengan dayfirst=True
         df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce", dayfirst=True)
         df["Realisasi APBD"] = pd.to_numeric(df["Realisasi APBD"], errors="coerce").astype("Int64")
         df["Realisasi PMA"] = pd.to_numeric(df["Realisasi PMA"], errors="coerce").astype("Int64")
@@ -144,7 +132,6 @@ elif st.session_state.page == "grafik":
         if not df_filtered.empty:
             latest = df_filtered.iloc[-1]
 
-            # Hitung delta dibandingkan data sebelumnya
             if len(df_filtered) > 1:
                 prev = df_filtered.iloc[-2]
                 delta_apbd = latest["Realisasi APBD"] - prev["Realisasi APBD"]
@@ -153,16 +140,13 @@ elif st.session_state.page == "grafik":
             else:
                 delta_apbd = delta_pma = delta_pmdn = 0
 
-            # Metrics dengan delta
-            col1, col2, col3 = st.columns(3)
-            col1.metric("APBD", f"{latest['Realisasi APBD']:,}", f"{delta_apbd:,}")
-            # Metrics dengan delta
+            # ✅ Metrics hanya sekali
             col1, col2, col3 = st.columns(3)
             col1.metric("APBD", f"{latest['Realisasi APBD']:,}", f"{delta_apbd:,}")
             col2.metric("PMA", f"{latest['Realisasi PMA']:,}", f"{delta_pma:,}")
             col3.metric("PMDN", f"{latest['Realisasi PMDN']:,}", f"{delta_pmdn:,}")
 
-            # Grafik tren APBD, PMA, PMDN, Infrastruktur
+            # Grafik tren
             st.subheader(f"Tren {mode} Tahun {selected_year}")
             st.line_chart(df_filtered[["Realisasi APBD","Realisasi PMA","Realisasi PMDN","Belanja Infrastruktur"]])
 
@@ -175,7 +159,7 @@ elif st.session_state.page == "grafik":
             ax1.set_ylabel("Nilai Ekspor (Rp)")
             st.pyplot(fig1)
 
-            # Grafik Produksi Padi
+                       # Grafik Produksi Padi
             st.subheader("Tren Produksi Padi per Triwulan")
             fig2, ax2 = plt.subplots(figsize=(8,5))
             ax2.plot(df_filtered.index, df_filtered["Produksi Padi"], color="tab:orange", marker='s')
